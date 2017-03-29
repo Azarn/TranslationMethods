@@ -70,12 +70,15 @@
     <Compile Include="ClassDescription\FieldInfo.cs" />
     <Compile Include="ClassDescription\MethodAccessFlags.cs" />
     <Compile Include="ClassDescription\MethodInfo.cs" />
-    <Compile Include="ClassDescription\Utils.cs" />
-    <Compile Include="OpCodes\OpCode.cs" />
-    <Compile Include="OpCodes\OpCodeName.cs" />
-    <Compile Include="OpCodes\OpCodes.cs" />
+    <Compile Include="Utils.cs" />
+    <Compile Include="Runner\Instruction.cs" />
+    <Compile Include="Runner\OpCode.cs" />
+    <Compile Include="Runner\OpCodeName.cs" />
+    <Compile Include="Runner\OpCodes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runner\Frame.cs" />
+    <Compile Include="Runner\InstructionExecutor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

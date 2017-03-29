@@ -184,6 +184,10 @@ namespace JVM.ClassDescription {
             res.String = ConvertFromModifiedUTF8(res.Bytes);
             return res;
         }
+
+        public override string ToString() {
+            return String;
+        }
     }
 
     public class CONSTANT_MethodHandle_info {

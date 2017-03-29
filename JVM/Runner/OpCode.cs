@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JVM.OpCodes {
+namespace JVM.Runner {
     public class OpCode {
         public OpCodeName Name;
         public byte Value;
