@@ -60,12 +60,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClassDescription\AccessFlagsType.cs" />
+    <Compile Include="ClassDescription\AttributeParser.cs" />
+    <Compile Include="ClassDescription\ClassAccessFlags.cs" />
     <Compile Include="ClassDescription\AttributeDescription.cs" />
     <Compile Include="ClassDescription\ClassFile.cs" />
     <Compile Include="ClassDescription\ConstantPoolDescription.cs" />
     <Compile Include="ClassDescription\ConstantPoolTag.cs" />
+    <Compile Include="ClassDescription\ExceptionTableDescription.cs" />
     <Compile Include="ClassDescription\FieldInfo.cs" />
+    <Compile Include="ClassDescription\MethodAccessFlags.cs" />
     <Compile Include="ClassDescription\MethodInfo.cs" />
     <Compile Include="ClassDescription\Utils.cs" />
     <Compile Include="OpCodes\OpCode.cs" />

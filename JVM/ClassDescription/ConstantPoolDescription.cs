@@ -63,39 +63,39 @@ namespace JVM.ClassDescription {
     }
 
     public class CONSTANT_Class_info {
-        public short NameIndex;
+        public ushort NameIndex;
 
         private CONSTANT_Class_info() { }
 
         public static CONSTANT_Class_info ParseData(byte[] data, ref int pos) {
             CONSTANT_Class_info res = new CONSTANT_Class_info();
-            res.NameIndex = Utils.ReadShort(data, ref pos);
+            res.NameIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
 
     public class CONSTANT_GeneralRef_info {
-        public short ClassIndex;
-        public short NameAndTypeIndex;
+        public ushort ClassIndex;
+        public ushort NameAndTypeIndex;
 
         private CONSTANT_GeneralRef_info() { }
 
         public static CONSTANT_GeneralRef_info ParseData(byte[] data, ref int pos) {
             CONSTANT_GeneralRef_info res = new CONSTANT_GeneralRef_info();
-            res.ClassIndex = Utils.ReadShort(data, ref pos);
-            res.NameAndTypeIndex = Utils.ReadShort(data, ref pos);
+            res.ClassIndex = Utils.ReadUShort(data, ref pos);
+            res.NameAndTypeIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
 
     public class CONSTANT_String_info {
-        public short StringIndex;
+        public ushort StringIndex;
 
         private CONSTANT_String_info() { }
 
         public static CONSTANT_String_info ParseData(byte[] data, ref int pos) {
             CONSTANT_String_info res = new CONSTANT_String_info();
-            res.StringIndex = Utils.ReadShort(data, ref pos);
+            res.StringIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
@@ -133,21 +133,21 @@ namespace JVM.ClassDescription {
     }
 
     public class CONSTANT_NameAndType_info {
-        public short NameIndex;
-        public short DescriptorIndex;
+        public ushort NameIndex;
+        public ushort DescriptorIndex;
 
         private CONSTANT_NameAndType_info() { }
 
         public static CONSTANT_NameAndType_info ParseData(byte[] data, ref int pos) {
             CONSTANT_NameAndType_info res = new CONSTANT_NameAndType_info();
-            res.NameIndex = Utils.ReadShort(data, ref pos);
-            res.DescriptorIndex = Utils.ReadShort(data, ref pos);
+            res.NameIndex = Utils.ReadUShort(data, ref pos);
+            res.DescriptorIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
 
     public class CONSTANT_Utf8_info {
-        public short Length;
+        public ushort Length;
         public byte[] Bytes;
         public string String;
 
@@ -176,7 +176,7 @@ namespace JVM.ClassDescription {
 
         public static CONSTANT_Utf8_info ParseData(byte[] data, ref int pos) {
             CONSTANT_Utf8_info res = new CONSTANT_Utf8_info();
-            res.Length = Utils.ReadShort(data, ref pos);
+            res.Length = Utils.ReadUShort(data, ref pos);
             res.Bytes = new byte[res.Length];
             for (int i = 0; i < res.Length; ++i) {
                 res.Bytes[i] = data[pos++];
@@ -188,40 +188,40 @@ namespace JVM.ClassDescription {
 
     public class CONSTANT_MethodHandle_info {
         public byte ReferenceKind;
-        public short ReferenceIndex;
+        public ushort ReferenceIndex;
 
         private CONSTANT_MethodHandle_info() { }
 
         public static CONSTANT_MethodHandle_info ParseData(byte[] data, ref int pos) {
             CONSTANT_MethodHandle_info res = new CONSTANT_MethodHandle_info();
             res.ReferenceKind = data[pos++];
-            res.ReferenceIndex = Utils.ReadShort(data, ref pos);
+            res.ReferenceIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
 
     public class CONSTANT_MethodType_info {
-        public short DescriptorIndex;
+        public ushort DescriptorIndex;
 
         private CONSTANT_MethodType_info() { }
 
         public static CONSTANT_MethodType_info ParseData(byte[] data, ref int pos) {
             CONSTANT_MethodType_info res = new CONSTANT_MethodType_info();
-            res.DescriptorIndex = Utils.ReadShort(data, ref pos);
+            res.DescriptorIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }
 
     public class CONSTANT_InvokeDynamic_info {
-        public short BootstrapMethodAttrIndex;
-        public short NameAndTypeIndex;
+        public ushort BootstrapMethodAttrIndex;
+        public ushort NameAndTypeIndex;
 
         private CONSTANT_InvokeDynamic_info() { }
 
         public static CONSTANT_InvokeDynamic_info ParseData(byte[] data, ref int pos) {
             CONSTANT_InvokeDynamic_info res = new CONSTANT_InvokeDynamic_info();
-            res.BootstrapMethodAttrIndex = Utils.ReadShort(data, ref pos);
-            res.NameAndTypeIndex = Utils.ReadShort(data, ref pos);
+            res.BootstrapMethodAttrIndex = Utils.ReadUShort(data, ref pos);
+            res.NameAndTypeIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
     }

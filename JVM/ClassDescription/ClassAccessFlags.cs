@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace JVM.ClassDescription {
-    public enum AccessFlagsType {
+    public enum ClassAccessFlags {
         ACC_PUBLIC = 0x0001,
         ACC_FINAL = 0x0010,
         ACC_SUPER = 0x0020,
