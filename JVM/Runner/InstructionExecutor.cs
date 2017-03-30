@@ -15,6 +15,13 @@ namespace JVM.Runner {
             { OpCodeName.d2l, d2l },
             { OpCodeName.@goto, @goto },
             { OpCodeName.iadd, iadd },
+            { OpCodeName.iconst_m1, iconst_m1 },
+            { OpCodeName.iconst_0, iconst_0 },
+            { OpCodeName.iconst_1, iconst_1 },
+            { OpCodeName.iconst_2, iconst_2 },
+            { OpCodeName.iconst_3, iconst_3 },
+            { OpCodeName.iconst_4, iconst_4 },
+            { OpCodeName.iconst_5, iconst_5 },
             { OpCodeName.ifeq, ifeq },
             { OpCodeName.if_icmple, if_icmple },
             { OpCodeName.iload, iload },
@@ -61,6 +68,41 @@ namespace JVM.Runner {
 
         private static void iadd(Instruction instruction, Frame frame) {
             frame.Stack.Push(frame.Stack.Pop() + frame.Stack.Pop());
+            nop(instruction, frame);
+        }
+
+        private static void iconst_m1(Instruction instruction, Frame frame) {
+            frame.Stack.Push(-1);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_0(Instruction instruction, Frame frame) {
+            frame.Stack.Push(0);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_1(Instruction instruction, Frame frame) {
+            frame.Stack.Push(1);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_2(Instruction instruction, Frame frame) {
+            frame.Stack.Push(2);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_3(Instruction instruction, Frame frame) {
+            frame.Stack.Push(3);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_4(Instruction instruction, Frame frame) {
+            frame.Stack.Push(4);
+            nop(instruction, frame);
+        }
+
+        private static void iconst_5(Instruction instruction, Frame frame) {
+            frame.Stack.Push(5);
             nop(instruction, frame);
         }
 
