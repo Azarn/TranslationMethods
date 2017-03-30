@@ -64,7 +64,8 @@ namespace JVM {
         }
 
         public static void Main(string[] args) {
-            byte[] data = File.ReadAllBytes(@"..\..\NOD.class");
+            //byte[] data = File.ReadAllBytes(@"..\..\NOD.class");
+            byte[] data = File.ReadAllBytes(@"..\..\SQRT.class");
             ClassFile cFile = ClassFile.ParseClassFile(data);
 
             // TODO: check cFile.AccessFlags

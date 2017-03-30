@@ -26,10 +26,12 @@ namespace JVM.ClassDescription {
 
         public IDictionary<string, object> AttributeParsers;
 
+        private IDictionary<int, ConstantPoolDescription> INDEX_TO_CONST_MAP = new Dictionary<int, ConstantPoolDescription>();
+
         private ClassFile() { }
 
         public ConstantPoolDescription GetConstant(ushort index) {
-            return ConstantPool[index - 1];
+            return INDEX_TO_CONST_MAP[index - 1];
         }
 
         public static ClassFile ParseClassFile(byte[] data) {
@@ -45,7 +47,12 @@ namespace JVM.ClassDescription {
             res.ConstantPoolCount = Utils.ReadUShort(data, ref pos);
             res.ConstantPool = new ConstantPoolDescription[res.ConstantPoolCount - 1];
             for (int i = 0; i < res.ConstantPoolCount - 1; ++i) {
-                res.ConstantPool[i] = ConstantPoolDescription.ParseData(data, ref pos);
+                ConstantPoolDescription cpd = ConstantPoolDescription.ParseData(data, ref pos);
+                res.ConstantPool[i] = cpd;
+                res.INDEX_TO_CONST_MAP.Add(i, cpd);
+                if (cpd.Tag == ConstantPoolTag.CONSTANT_Double || cpd.Tag == ConstantPoolTag.CONSTANT_Long) {;
+                    ++i;                    // fucking java
+                }
             }
 
             res.AccessFlags = Utils.ReadUShort(data, ref pos);

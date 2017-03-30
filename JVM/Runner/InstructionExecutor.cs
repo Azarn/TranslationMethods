@@ -13,6 +13,10 @@ namespace JVM.Runner {
             { OpCodeName.d2l, d2l },
             { OpCodeName.ddiv, ddiv },
             { OpCodeName.dadd, dadd },
+            { OpCodeName.dcmpg, dcmpg },
+            { OpCodeName.dcmpl, dcmpl },
+            { OpCodeName.dconst_0, dconst_0 },
+            { OpCodeName.dconst_1, dconst_1 },
             { OpCodeName.dload, dload },
             { OpCodeName.dload_0, dload_0 },
             { OpCodeName.dload_1, dload_1 },
@@ -23,6 +27,7 @@ namespace JVM.Runner {
             { OpCodeName.dstore_1, dstore_1 },
             { OpCodeName.dstore_2, dstore_2 },
             { OpCodeName.dstore_3, dstore_3 },
+            { OpCodeName.dsub, dsub },
             { OpCodeName.@goto, @goto },
             { OpCodeName.i2d, i2d },
             { OpCodeName.iadd, iadd },
@@ -35,6 +40,7 @@ namespace JVM.Runner {
             { OpCodeName.iconst_5, iconst_5 },
             { OpCodeName.idiv, idiv },
             { OpCodeName.ifeq, ifeq },
+            { OpCodeName.ifne, ifne },
             { OpCodeName.if_icmple, if_icmple },
             { OpCodeName.iload, iload },
             { OpCodeName.iload_0, iload_0 },
@@ -52,7 +58,10 @@ namespace JVM.Runner {
             { OpCodeName.@return, @return },
             { OpCodeName.sipush, sipush },
 
-            { OpCodeName.da_oni_nikto_epta, da_oni_nikto_epta }
+            { OpCodeName.da_oni_nikto_epta_i, da_oni_nikto_epta_i },
+            { OpCodeName.da_oni_nikto_epta_f, da_oni_nikto_epta_f },
+            { OpCodeName.da_oni_nikto_epta_d, da_oni_nikto_epta_d },
+            { OpCodeName.da_oni_nikto_epta_l, da_oni_nikto_epta_l }
         };
 
         private static void bipush(byte[] operand, Frame frame, ClassFile cFile) {
@@ -79,6 +88,52 @@ namespace JVM.Runner {
             double s = frame.GetDoubleFromStack();
             double f = frame.GetDoubleFromStack();
             frame.PutDoubleToStack(f + s);
+            nop(operand, frame, cFile);
+        }
+
+        private static void dcmpg(byte[] operand, Frame frame, ClassFile cFile) {
+            double s = frame.GetDoubleFromStack();
+            double f = frame.GetDoubleFromStack();
+            int res = 0;
+            if (double.IsNaN(f) || double.IsNaN(s)) {
+                res = 1;
+            } else {
+                res = f.CompareTo(s);
+                if (res > 1) {
+                    res = 1;
+                } else if (res < -1) {
+                    res = -1;
+                }
+            }
+            frame.Stack.Push(res);
+            nop(operand, frame, cFile);
+        }
+
+        private static void dcmpl(byte[] operand, Frame frame, ClassFile cFile) {
+            double s = frame.GetDoubleFromStack();
+            double f = frame.GetDoubleFromStack();
+            int res = 0;
+            if (double.IsNaN(f) || double.IsNaN(s)) {
+                res = -1;
+            } else {
+                res = f.CompareTo(s);
+                if (res > 1) {
+                    res = 1;
+                } else if (res < -1) {
+                    res = -1;
+                }
+            }
+            frame.Stack.Push(res);
+            nop(operand, frame, cFile);
+        }
+
+        private static void dconst_0(byte[] operand, Frame frame, ClassFile cFile) {
+            frame.PutDoubleToStack(0.0);
+            nop(operand, frame, cFile);
+        }
+
+        private static void dconst_1(byte[] operand, Frame frame, ClassFile cFile) {
+            frame.PutDoubleToStack(1.0);
             nop(operand, frame, cFile);
         }
 
@@ -139,6 +194,13 @@ namespace JVM.Runner {
             nop(operand, frame, cFile);
         }
 
+        private static void dsub(byte[] operand, Frame frame, ClassFile cFile) {
+            double s = frame.GetDoubleFromStack();
+            double f = frame.GetDoubleFromStack();
+            frame.PutDoubleToStack(f - s);
+            nop(operand, frame, cFile);
+        }
+
         private static void @goto(byte[] operand, Frame frame, ClassFile cFile) {
             frame.IP += BitConverter.ToInt16(operand, 0);
         }
@@ -191,7 +253,7 @@ namespace JVM.Runner {
         private static void idiv(byte[] operand, Frame frame, ClassFile cFile) {
             int s = frame.Stack.Pop();
             int f = frame.Stack.Pop();
-            frame.Stack.Push(s / f);
+            frame.Stack.Push(f / s);
             nop(operand, frame, cFile);
         }
 
@@ -207,6 +269,14 @@ namespace JVM.Runner {
 
         private static void ifeq(byte[] operand, Frame frame, ClassFile cFile) {
             if(frame.Stack.Pop() == 0) {
+                @goto(operand, frame, cFile);
+            } else {
+                nop(operand, frame, cFile);
+            }
+        }
+
+        private static void ifne(byte[] operand, Frame frame, ClassFile cFile) {
+            if (frame.Stack.Pop() != 0) {
                 @goto(operand, frame, cFile);
             } else {
                 nop(operand, frame, cFile);
@@ -275,7 +345,8 @@ namespace JVM.Runner {
         }
 
         private static void ldc2_w(byte[] operand, Frame frame, ClassFile cFile) {
-            short index = BitConverter.ToInt16(operand, 0);
+            ushort index = BitConverter.ToUInt16(operand, 0);
+            frame.PutLongToStack(((CONSTANT_B8_info)cFile.GetConstant(index).Info).ToLong());
             nop(operand, frame, cFile);
         }
 
@@ -288,8 +359,23 @@ namespace JVM.Runner {
             frame.IsReturned = true;
         }
 
-        private static void da_oni_nikto_epta(byte[] operand, Frame frame, ClassFile cFile) {
+        private static void da_oni_nikto_epta_i(byte[] operand, Frame frame, ClassFile cFile) {
             Console.WriteLine(frame.Stack.Pop());
+            nop(operand, frame, cFile);
+        }
+
+        private static void da_oni_nikto_epta_f(byte[] operand, Frame frame, ClassFile cFile) {
+            Console.WriteLine(frame.GetFloatFromStack());
+            nop(operand, frame, cFile);
+        }
+
+        private static void da_oni_nikto_epta_d(byte[] operand, Frame frame, ClassFile cFile) {
+            Console.WriteLine(frame.GetDoubleFromStack());
+            nop(operand, frame, cFile);
+        }
+
+        private static void da_oni_nikto_epta_l(byte[] operand, Frame frame, ClassFile cFile) {
+            Console.WriteLine(frame.GetLongFromStack());
             nop(operand, frame, cFile);
         }
     }

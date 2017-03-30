@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace JVM.Runner {
@@ -17,7 +16,7 @@ namespace JVM.Runner {
         }
 
         private long GetLongFromTwoInt32(int f, int s) {
-            return (long)f << 32 + s;
+            return (long)(((ulong)f << 32) + (uint)s);
         }
 
         private int[] GetTwoInt32FromLong(long value) {
@@ -57,7 +56,7 @@ namespace JVM.Runner {
         public void PutLongToLocals(long value, int index) {
             int[] data = GetTwoInt32FromLong(value);
             Locals[index] = data[0];
-            Locals[index] = data[1];
+            Locals[index + 1] = data[1];
         }
 
         public float GetFloatFromStack() {

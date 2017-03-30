@@ -11,6 +11,10 @@ namespace JVM.Runner {
         d2i,
         d2l,
         dadd,
+        dconst_0,
+        dconst_1,
+        dcmpg,
+        dcmpl,
         ddiv,
         dload,
         dload_0,
@@ -22,6 +26,7 @@ namespace JVM.Runner {
         dstore_1,
         dstore_2,
         dstore_3,
+        dsub,
         @goto,
         i2d,
         iadd,
@@ -35,6 +40,7 @@ namespace JVM.Runner {
         idiv,
         if_icmple,
         ifeq,
+        ifne,
         iload,
         iload_0,
         iload_1,
@@ -51,6 +57,9 @@ namespace JVM.Runner {
         @return,
         sipush,
 
-        da_oni_nikto_epta
+        da_oni_nikto_epta_i,
+        da_oni_nikto_epta_f,
+        da_oni_nikto_epta_d,
+        da_oni_nikto_epta_l
     }
 }

@@ -143,7 +143,7 @@ namespace JVM.ClassDescription {
         }
 
         public long ToLong() {
-            return ((long)BitConverter.ToInt32(HighBytes, 0) << 32) + BitConverter.ToInt32(LowBytes, 0);
+            return (long)(((ulong)BitConverter.ToUInt32(HighBytes, 0) << 32) + BitConverter.ToUInt32(LowBytes, 0));
         }
 
         public double ToDouble() {

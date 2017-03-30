@@ -12,6 +12,10 @@ namespace JVM.Runner {
             new OpCode { Name = OpCodeName.d2i, Value = 0x8e, OperandSize = 0 },
             new OpCode { Name = OpCodeName.d2l, Value = 0x8f, OperandSize = 0 },
             new OpCode { Name = OpCodeName.dadd, Value = 0x63, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.dcmpg, Value = 0x98, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.dcmpl, Value = 0x97, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.dconst_0, Value = 0x0e, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.dconst_1, Value = 0x0f, OperandSize = 0 },
             new OpCode { Name = OpCodeName.ddiv, Value = 0x6f, OperandSize = 0 },
             new OpCode { Name = OpCodeName.dload, Value = 0x18, OperandSize = 1 },
             new OpCode { Name = OpCodeName.dload_0, Value = 0x26, OperandSize = 0 },
@@ -23,6 +27,7 @@ namespace JVM.Runner {
             new OpCode { Name = OpCodeName.dstore_1, Value = 0x48, OperandSize = 0 },
             new OpCode { Name = OpCodeName.dstore_2, Value = 0x49, OperandSize = 0 },
             new OpCode { Name = OpCodeName.dstore_3, Value = 0x4a, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.dsub, Value = 0x67, OperandSize = 0 },
             new OpCode { Name = OpCodeName.@goto, Value = 0xa7, OperandSize = 2 },
             new OpCode { Name = OpCodeName.i2d, Value = 0x87, OperandSize = 0 },
             new OpCode { Name = OpCodeName.iadd, Value = 0x60, OperandSize = 0 },
@@ -36,6 +41,7 @@ namespace JVM.Runner {
             new OpCode { Name = OpCodeName.idiv, Value = 0x6c, OperandSize = 0 },
             new OpCode { Name = OpCodeName.if_icmple, Value = 0xa4, OperandSize = 2 },
             new OpCode { Name = OpCodeName.ifeq, Value = 0x99, OperandSize = 2 },
+            new OpCode { Name = OpCodeName.ifne, Value = 0x9a, OperandSize = 2 },
             new OpCode { Name = OpCodeName.iload, Value = 0x15, OperandSize = 1 },
             new OpCode { Name = OpCodeName.iload_0, Value = 0x1a, OperandSize = 0 },
             new OpCode { Name = OpCodeName.iload_1, Value = 0x1b, OperandSize = 0 },
@@ -52,7 +58,10 @@ namespace JVM.Runner {
             new OpCode { Name = OpCodeName.@return, Value = 0xb1, OperandSize = 0 },
             new OpCode { Name = OpCodeName.sipush, Value = 0x11, OperandSize = 2 },
 
-            new OpCode { Name = OpCodeName.da_oni_nikto_epta, Value = 0xee, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.da_oni_nikto_epta_i, Value = 0xee, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.da_oni_nikto_epta_f, Value = 0xed, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.da_oni_nikto_epta_d, Value = 0xec, OperandSize = 0 },
+            new OpCode { Name = OpCodeName.da_oni_nikto_epta_l, Value = 0xeb, OperandSize = 0 },
         };
 
         public static readonly IDictionary<byte, OpCode> VALUE_TO_OPCODE_MAP = new Dictionary<byte, OpCode>();
