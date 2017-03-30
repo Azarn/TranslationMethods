@@ -35,7 +35,7 @@ namespace JVM {
             return res;
         }
 
-        private static void RunMethod(MethodInfo m, IEnumerable<int> args = null) {
+        private static void RunMethod(ClassFile cFile, MethodInfo m, IEnumerable<int> args = null) {
             var codeAttr = m.AttributeParsers["Code"] as CodeAttributeParser;
             if (codeAttr == null) {
                 throw new Exception("Code attribute is not found!");
@@ -91,7 +91,7 @@ namespace JVM {
             if (methodMain == null) {
                 throw new Exception("Main method is not found!");
             }
-            RunMethod(methodMain, null);
+            RunMethod(cFile, methodMain, null);
         }
     }
 }
