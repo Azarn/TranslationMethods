@@ -59,7 +59,7 @@ namespace JVM {
 
             while(!frame.IsReturned) {
                 Instruction instr = offsetMap[frame.IP];
-                InstructionExecutor.EXECUTORS_MAP[instr.OpCode.Name](instr, frame);
+                InstructionExecutor.EXECUTORS_MAP[instr.OpCode.Name](instr.Operand, frame, cFile);
             }
         }
 
