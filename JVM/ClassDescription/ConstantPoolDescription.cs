@@ -110,7 +110,16 @@ namespace JVM.ClassDescription {
             for (int i = 0; i < 4; ++i) {
                 res.Bytes[i] = data[pos++];
             }
+            Utils.ReverseIfEndian(res.Bytes);
             return res;
+        }
+
+        public int ToInt() {
+            return BitConverter.ToInt32(Bytes, 0);
+        }
+
+        public float ToFloat() {
+            return BitConverter.ToSingle(Bytes, 0);
         }
     }
 
@@ -125,10 +134,20 @@ namespace JVM.ClassDescription {
             for (int i = 0; i < 4; ++i) {
                 res.HighBytes[i] = data[pos++];
             }
+            Utils.ReverseIfEndian(res.HighBytes);
             for (int i = 0; i < 4; ++i) {
                 res.LowBytes[i] = data[pos++];
             }
+            Utils.ReverseIfEndian(res.LowBytes);
             return res;
+        }
+
+        public long ToLong() {
+            return ((long)BitConverter.ToInt32(HighBytes, 0) << 32) + BitConverter.ToInt32(LowBytes, 0);
+        }
+
+        public double ToDouble() {
+            return BitConverter.Int64BitsToDouble(ToLong());
         }
     }
 
