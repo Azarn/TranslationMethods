@@ -9,5 +9,6 @@ namespace JVM.Runner {
         public OpCodeName Name;
         public byte Value;
         public uint OperandSize;
+        public int StackChange;
     }
 }

@@ -9,7 +9,12 @@ namespace JVM.ClassDescription {
         public ConstantPoolTag Tag;
         public object Info;
 
-        private ConstantPoolDescription() { }
+        public ConstantPoolDescription(ConstantPoolTag tag, object info) {
+            Tag = tag;
+            Info = info;
+        }
+
+        private ConstantPoolDescription() {}
 
         public static ConstantPoolDescription ParseData(byte[] data, ref int pos) {
             ConstantPoolDescription res = new ConstantPoolDescription();
@@ -103,6 +108,10 @@ namespace JVM.ClassDescription {
     public class CONSTANT_B4_info {
         public byte[] Bytes = new byte[4];
 
+        public CONSTANT_B4_info(byte[] bytes) {
+            Bytes = bytes;
+        }
+
         private CONSTANT_B4_info() { }
 
         public static CONSTANT_B4_info ParseData(byte[] data, ref int pos) {
@@ -126,6 +135,11 @@ namespace JVM.ClassDescription {
     public class CONSTANT_B8_info {
         public byte[] HighBytes = new byte[4];
         public byte[] LowBytes = new byte[4];
+
+        public CONSTANT_B8_info(byte[] highBytes, byte[] lowBytes) {
+            HighBytes = highBytes;
+            LowBytes = lowBytes;
+        }
 
         private CONSTANT_B8_info() { }
 

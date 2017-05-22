@@ -92,7 +92,7 @@ namespace JVM {
             if (methodMain == null) {
                 throw new Exception("Main method is not found!");
             }
-            RunMethod(cFile, methodMain, null);
+            RunMethod(cFile, methodMain, new int[0]);
         }
     }
 }

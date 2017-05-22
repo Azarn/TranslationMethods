@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 namespace JVM.Runner {
     public class Instruction {
         public OpCode OpCode;
-        public byte[] Operand;
+        public byte[] Operand = new byte[0];
 
         public override string ToString() {
-            return string.Format("{0} <{1}>", OpCode.Name, Operand.Length);
+            if (Operand.Length == 0) {
+                return OpCode.Name.ToString();
+            }
+            return string.Format("{0} <{1}>", OpCode.Name, BitConverter.ToString(Operand));
         }
     }
 }

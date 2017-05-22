@@ -22,6 +22,8 @@ namespace JVM.Runner {
             { OpCodeName.dload_1, dload_1 },
             { OpCodeName.dload_2, dload_2 },
             { OpCodeName.dload_3, dload_3 },
+            { OpCodeName.dmul, dmul },
+            { OpCodeName.drem, drem },
             { OpCodeName.dstore, dstore },
             { OpCodeName.dstore_0, dstore_0 },
             { OpCodeName.dstore_1, dstore_1 },
@@ -39,6 +41,8 @@ namespace JVM.Runner {
             { OpCodeName.iconst_4, iconst_4 },
             { OpCodeName.iconst_5, iconst_5 },
             { OpCodeName.idiv, idiv },
+            { OpCodeName.imul, imul},
+            { OpCodeName.isub, isub},
             { OpCodeName.ifeq, ifeq },
             { OpCodeName.ifne, ifne },
             { OpCodeName.if_icmple, if_icmple },
@@ -53,6 +57,8 @@ namespace JVM.Runner {
             { OpCodeName.istore_1, istore_1 },
             { OpCodeName.istore_2, istore_2 },
             { OpCodeName.istore_3, istore_3 },
+            { OpCodeName.ldc, ldc },
+            { OpCodeName.ldc_w, ldc_w },
             { OpCodeName.ldc2_w, ldc2_w },
             { OpCodeName.nop, nop },
             { OpCodeName.@return, @return },
@@ -166,6 +172,20 @@ namespace JVM.Runner {
 
         private static void dload_3(byte[] operand, Frame frame, ClassFile cFile) {
             frame.PutDoubleToStack(frame.GetDoubleFromLocals(3));
+            nop(operand, frame, cFile);
+        }
+
+        private static void dmul(byte[] operand, Frame frame, ClassFile cFile) {
+            double s = frame.GetDoubleFromStack();
+            double f = frame.GetDoubleFromStack();
+            frame.PutDoubleToStack(f * s);
+            nop(operand, frame, cFile);
+        }
+
+        private static void drem(byte[] operand, Frame frame, ClassFile cFile) {
+            double s = frame.GetDoubleFromStack();
+            double f = frame.GetDoubleFromStack();
+            frame.PutDoubleToStack(f % s);
             nop(operand, frame, cFile);
         }
 
@@ -315,6 +335,20 @@ namespace JVM.Runner {
             nop(operand, frame, cFile);
         }
 
+        private static void imul(byte[] operand, Frame frame, ClassFile cFile) {
+            int s = frame.Stack.Pop();
+            int f = frame.Stack.Pop();
+            frame.Stack.Push(f * s);
+            nop(operand, frame, cFile);
+        }
+
+        private static void isub(byte[] operand, Frame frame, ClassFile cFile) {
+            int s = frame.Stack.Pop();
+            int f = frame.Stack.Pop();
+            frame.Stack.Push(f / s);
+            nop(operand, frame, cFile);
+        }
+
         private static void istore(byte[] operand, Frame frame, ClassFile cFile) {
             frame.Locals[operand[0]] = frame.Stack.Pop();
             nop(operand, frame, cFile);
@@ -342,6 +376,17 @@ namespace JVM.Runner {
 
         private static void nop(byte[] operand, Frame frame, ClassFile cFile) {
             frame.IP += 1 + operand.Length;
+        }
+
+        private static void ldc(byte[] operand, Frame frame, ClassFile cFile) {
+            frame.Stack.Push(((CONSTANT_B4_info)cFile.GetConstant(operand[0]).Info).ToInt());
+            nop(operand, frame, cFile);
+        }
+
+        private static void ldc_w(byte[] operand, Frame frame, ClassFile cFile) {
+            ushort index = BitConverter.ToUInt16(operand, 0);
+            frame.Stack.Push(((CONSTANT_B4_info)cFile.GetConstant(index).Info).ToInt());
+            nop(operand, frame, cFile);
         }
 
         private static void ldc2_w(byte[] operand, Frame frame, ClassFile cFile) {
