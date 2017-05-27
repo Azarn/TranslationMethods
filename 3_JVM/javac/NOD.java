@@ -7,7 +7,7 @@ public class NOD
     a = a + (3 - 3 + 0) + 60 - 60;
     int b = 130;
 
-    while(a != 0 && b!=0) {
+    while(a != 0 && b!=0 || true && false) {
       if (a > b) {
           a %= b;
       } else {

@@ -9,6 +9,8 @@ namespace JVM.Runner {
         public OpCode OpCode;
         public byte[] Operand = new byte[0];
 
+        public uint ByteSize => OpCode.OpCodeSize;
+
         public override string ToString() {
             if (Operand.Length == 0) {
                 return OpCode.Name.ToString();

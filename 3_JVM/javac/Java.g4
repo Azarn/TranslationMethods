@@ -36,13 +36,20 @@ expression
     ;
 
 expression_value
-    : LPAREN expression_value RPAREN                # ParenExpr
-    | expression                                    # PureExpr
-    | name=VARNAME                                  # VarName
-    | number=NUM                                    # Number
-    | boolean_val                                   # Boolean
-    | expression_value (op expression_value)+       # ExpressionChain
-    | cast LPAREN expression_value RPAREN           # ExprCast
+    : LPAREN expression_value RPAREN                                        # ParenExpr
+    | boolean_val                                                           # Boolean
+    | name=VARNAME                                                          # VarName
+    | number=number_val                                                     # Number
+    | LOGICAL_NOT expression_value                                          # LogicalNot
+    | cast LPAREN expression_value RPAREN                                   # ExprCast
+    | (ADD | SUB) expression_value                                          # UnaryPlusMinus
+    | first=expression_value op=(MUL | DIV | REM) second=expression_value   # MulDivRem
+    | first=expression_value op=(ADD | SUB) second=expression_value         # AddSub
+    | first=expression_value op=(LT | LE | GT | GE) second=expression_value # LtLeGtGe
+    | first=expression_value op=(EQUAL | NOTEQUAL) second=expression_value  # EqualNotEqual
+    | first=expression_value AND second=expression_value                    # And
+    | first=expression_value OR second=expression_value                     # Or
+    | expression                                                            # PureExpr
     ;
 
 cast
@@ -74,22 +81,6 @@ public_maybe_static
     | STATIC? PUBLIC
     ;
 
-op
-    : EQUAL
-    | LE
-    | GE
-    | GT
-    | LT
-    | NOTEQUAL
-    | AND
-    | OR
-    | ADD
-    | SUB
-    | MUL
-    | DIV
-    | MOD
-    ;
-
 lop
     : LA
     | LM
@@ -108,12 +99,20 @@ boolean_val
     | FALSE
     ;
 
+number_val
+    : INTEGER_NUM
+    | DOUBLE_NUM
+    ;
+
 /*
  * Lexer Rules
  */
 
-NUM
-    : '-'?DIGITS+
+DOUBLE_NUM
+    : '-'? DIGITS+ '.' DIGITS+
+    ;
+INTEGER_NUM
+    : '-'? DIGITS+
     ;
 DIGITS
     : [0123456789]
@@ -243,6 +242,9 @@ DIV
     ;
 MOD
     : '%'
+    ;
+LOGICAL_NOT
+    : '!'
     ;
 AND
     : '&&'

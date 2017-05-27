@@ -12,6 +12,7 @@ namespace javac {
         INT,
         DOUBLE,
         FLOAT,
+        BOOLEAN,
         VOID
     }
 
@@ -334,6 +335,273 @@ namespace javac {
             }
             return new Instruction { OpCode = OpCodes.NAME_TO_OPCODE_MAP[opName] };
         }
+
+        public static Instruction GenerateGoto(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.@goto],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntLT(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmplt],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntLE(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmple],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntGT(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmpgt],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntGE(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmpge],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntEqual(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmpeq],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateTwoIntNotEqual(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.if_icmpne],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntGT(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifgt],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntGE(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifge],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntLT(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iflt],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntLE(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifle],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntEqual(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifeq],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction GenerateIntNotEqual(short jumpOffset) {
+            return new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifne],
+                Operand = BitConverter.GetBytes(jumpOffset)
+            };
+        }
+
+        public static Instruction[] GenerateBooleanLT(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntLT(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntGT(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
+
+        public static Instruction[] GenerateBooleanLE(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntLE(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntGE(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
+
+        public static Instruction[] GenerateBooleanGT(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntGT(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntLT(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
+
+        public static Instruction[] GenerateBooleanGE(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntGE(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntLE(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
+
+        public static Instruction[] GenerateBooleanEqual(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.BOOLEAN:
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntEqual(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntEqual(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
+
+        public static Instruction[] GenerateBooleanNotEqual(TYPE type) {
+            var res = new List<Instruction>();
+
+            switch (type) {
+                case TYPE.BOOLEAN:
+                case TYPE.INT:
+                    res.Add(GenerateTwoIntNotEqual(7));
+                    break;
+                case TYPE.DOUBLE:
+                    res.Add(new Instruction {
+                        OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dcmpg]
+                    });
+                    res.Add(GenerateIntNotEqual(7));
+                    break;
+                // TODO: Implement FLOAT
+                default:
+                    throw new Exception(string.Format("Cannot create compare `lower than` for type {0}", type));
+            }
+
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0]
+            });
+            res.Add(GenerateGoto(4));
+            res.Add(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            });
+
+            return res.ToArray();
+        }
     }
 
     class VariableTypeVisitor : JavaBaseVisitor<TYPE> {
@@ -376,48 +644,77 @@ namespace javac {
         }
 
         public override ExpressionValue VisitNumber([NotNull] JavaParser.NumberContext context) {
-            // TODO: Detect not only INT type
-            var expr = new ExpressionValue { type = TYPE.INT };
-            int value = int.Parse(context.number.Text);
-            Instruction instruction = new Instruction();
-            if (value <= sbyte.MaxValue) {
-                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.bipush];
-                instruction.Operand = new byte[1] { (byte) value };
-            } else if (value <= short.MaxValue) {
-                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.sipush];
-                instruction.Operand = BitConverter.GetBytes((short)value);
-            } else {
-                var index = _stackFrame.GetOrAddConstant4(BitConverter.GetBytes(value), ConstantPoolTag.CONSTANT_Integer);
-                if (index <= byte.MaxValue) {
-                    instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ldc];
-                    instruction.Operand = new byte[1] { (byte)index };
+            // TODO: Detect FLOAT type
+            var expr = new ExpressionValue();
+            var doubleVal = context.number.DOUBLE_NUM();
+            var intVal = context.number.INTEGER_NUM();
+            var instruction = new Instruction();
+
+            if (intVal != null) {
+                expr.type = TYPE.INT;
+                int value = int.Parse(intVal.GetText());
+                switch (value) {
+                    case -1:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_m1];
+                        break;
+                    case 0:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0];
+                        break;
+                    case 1:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1];
+                        break;
+                    case 2:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_2];
+                        break;
+                    case 3:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_3];
+                        break;
+                    case 4:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_4];
+                        break;
+                    case 5:
+                        instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_5];
+                        break;
+                    default:
+                        if (value <= sbyte.MaxValue) {
+                            instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.bipush];
+                            instruction.Operand = new byte[1] { (byte)value };
+                        } else if (value <= short.MaxValue) {
+                            instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.sipush];
+                            instruction.Operand = BitConverter.GetBytes((short)value);
+                        } else {
+                            var index = _stackFrame.GetOrAddConstant4(BitConverter.GetBytes(value), ConstantPoolTag.CONSTANT_Integer);
+                            if (index <= byte.MaxValue) {
+                                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ldc];
+                                instruction.Operand = new byte[1] { (byte)index };
+                            } else {
+                                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ldc_w];
+                                instruction.Operand = BitConverter.GetBytes(index);
+                            }
+                        }
+                        break;
+                }
+            } else if (doubleVal != null) {
+                expr.type = TYPE.DOUBLE;
+                double value = double.Parse(doubleVal.GetText());
+                if (value == 0.0) {
+                    instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dconst_0];
+                } else if (value == 1.0) {
+                    instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dconst_1];
                 } else {
-                    instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ldc_w];
+                    var data = (ulong)BitConverter.DoubleToInt64Bits(value);
+                    byte[] highbytes = BitConverter.GetBytes((uint)(data >> 32));
+                    byte[] lowbytes = BitConverter.GetBytes((uint)data);
+                    var index = _stackFrame.GetOrAddConstant8(highbytes, lowbytes, ConstantPoolTag.CONSTANT_Double);
+                    instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ldc2_w];
                     instruction.Operand = BitConverter.GetBytes(index);
                 }
+            } else {
+                throw new Exception("Unknown number value!");
             }
 
             AddInstruction(instruction, ref expr);
             return expr;
-        }
-
-        public override ExpressionValue VisitExpressionChain([NotNull] JavaParser.ExpressionChainContext context) {
-            var exprs = context.expression_value();
-            var first_expr = exprs[0].Accept(this);
-            var second_expr = exprs[1].Accept(this);
-            var op = context.op()[0];
-            // TODO: Check casts
-            first_expr.instructions.AddRange(second_expr.instructions);
-            switch (op.GetText()) {
-                // TODO: Implement others
-                case "+":
-                    AddInstruction(InstructionGenerator.GenerateAddition(first_expr.type), ref first_expr);
-                    break;
-                case "-":
-                    AddInstruction(InstructionGenerator.GenerateSubtraction(first_expr.type), ref first_expr);
-                    break;
-            }
-            return first_expr;
         }
 
         public override ExpressionValue VisitAssignment([NotNull] JavaParser.AssignmentContext context) {
@@ -452,6 +749,150 @@ namespace javac {
             }
 
             AddInstruction(instr_assign, ref expr);
+            return expr;
+        }
+
+        public override ExpressionValue VisitBoolean([NotNull] JavaParser.BooleanContext context) {
+            var expr = new ExpressionValue { type = TYPE.BOOLEAN };
+            var instruction = new Instruction();
+            if (context.boolean_val().TRUE() != null) {
+                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1];
+            } else {
+                instruction.OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_0];
+            }
+            AddInstruction(instruction, ref expr);
+            return expr;
+        }
+
+        public override ExpressionValue VisitLogicalNot([NotNull] JavaParser.LogicalNotContext context) {
+            var expr = context.expression_value().Accept(this);
+            if (expr.type != TYPE.BOOLEAN) {
+                throw new Exception("Cannot cast expression to boolean!");
+            }
+
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.iconst_1]
+            }, ref expr);
+
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ixor]
+            }, ref expr);
+            
+            return expr;
+        }
+
+        public override ExpressionValue VisitUnaryPlusMinus([NotNull] JavaParser.UnaryPlusMinusContext context) {
+            var expr = context.expression_value().Accept(this);
+            if (context.SUB() != null) {
+                AddInstruction(new Instruction {
+                    OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ineg]
+                }, ref expr);
+            }
+            return expr;
+        }
+
+        public override ExpressionValue VisitMulDivRem([NotNull] JavaParser.MulDivRemContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+            expr.instructions.AddRange(second_expr.instructions);
+
+            switch (context.op.Text) {
+                case "*":
+                    AddInstruction(InstructionGenerator.GenerateMultiplication(expr.type), ref expr);
+                    break;
+                case "/":
+                    AddInstruction(InstructionGenerator.GenerateDivision(expr.type), ref expr);
+                    break;
+                case "%":
+                    AddInstruction(InstructionGenerator.GenerateReminder(expr.type), ref expr);
+                    break;
+            }
+            return expr;
+        }
+
+        public override ExpressionValue VisitAddSub([NotNull] JavaParser.AddSubContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+            expr.instructions.AddRange(second_expr.instructions);
+
+            switch (context.op.Text) {
+                case "+":
+                    AddInstruction(InstructionGenerator.GenerateAddition(expr.type), ref expr);
+                    break;
+                case "-":
+                    AddInstruction(InstructionGenerator.GenerateSubtraction(expr.type), ref expr);
+                    break;
+            }
+            return expr;
+        }
+
+        public override ExpressionValue VisitLtLeGtGe([NotNull] JavaParser.LtLeGtGeContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+            expr.instructions.AddRange(second_expr.instructions);
+
+            switch (context.op.Text) {
+                case ">":
+                    foreach (var instruction in InstructionGenerator.GenerateBooleanGT(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+                case ">=":
+                    foreach (var instruction in InstructionGenerator.GenerateBooleanGE(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+                case "<":
+                    foreach(var instruction in InstructionGenerator.GenerateBooleanLT(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+                case "<=":
+                    foreach (var instruction in InstructionGenerator.GenerateBooleanLE(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+            }
+
+            expr.type = TYPE.BOOLEAN;
+            return expr;
+        }
+
+        public override ExpressionValue VisitEqualNotEqual([NotNull] JavaParser.EqualNotEqualContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+            expr.instructions.AddRange(second_expr.instructions);
+
+            switch (context.op.Text) {
+                case "==":
+                    foreach (var instruction in InstructionGenerator.GenerateBooleanEqual(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+                case "!=":
+                    foreach (var instruction in InstructionGenerator.GenerateBooleanNotEqual(expr.type)) {
+                        AddInstruction(instruction, ref expr);
+                    }
+                    break;
+            }
+
+            expr.type = TYPE.BOOLEAN;
             return expr;
         }
 
