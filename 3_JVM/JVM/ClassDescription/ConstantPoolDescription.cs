@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace JVM.ClassDescription {
     public class ConstantPoolDescription {
         public ConstantPoolTag Tag;
-        public object Info;
+        public ByteSerializable Info;
 
-        public ConstantPoolDescription(ConstantPoolTag tag, object info) {
+        public ConstantPoolDescription(ConstantPoolTag tag, ByteSerializable info) {
             Tag = tag;
             Info = info;
         }
@@ -24,11 +24,7 @@ namespace JVM.ClassDescription {
                     res.Info = CONSTANT_Class_info.ParseData(data, ref pos);
                     break;
                 case ConstantPoolTag.CONSTANT_Fieldref:
-                    res.Info = CONSTANT_GeneralRef_info.ParseData(data, ref pos);
-                    break;
                 case ConstantPoolTag.CONSTANT_Methodref:
-                    res.Info = CONSTANT_GeneralRef_info.ParseData(data, ref pos);
-                    break;
                 case ConstantPoolTag.CONSTANT_InterfaceMethodref:
                     res.Info = CONSTANT_GeneralRef_info.ParseData(data, ref pos);
                     break;
@@ -36,14 +32,10 @@ namespace JVM.ClassDescription {
                     res.Info = CONSTANT_String_info.ParseData(data, ref pos);
                     break;
                 case ConstantPoolTag.CONSTANT_Integer:
-                    res.Info = CONSTANT_B4_info.ParseData(data, ref pos);
-                    break;
                 case ConstantPoolTag.CONSTANT_Float:
                     res.Info = CONSTANT_B4_info.ParseData(data, ref pos);
                     break;
                 case ConstantPoolTag.CONSTANT_Long:
-                    res.Info = CONSTANT_B8_info.ParseData(data, ref pos);
-                    break;
                 case ConstantPoolTag.CONSTANT_Double:
                     res.Info = CONSTANT_B8_info.ParseData(data, ref pos);
                     break;
@@ -65,25 +57,49 @@ namespace JVM.ClassDescription {
             }
             return res;
         }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.Add((byte)Tag);
+            res.AddRange(Info.BuildData());
+            return res.ToArray();
+        }
     }
 
-    public class CONSTANT_Class_info {
+    public interface ByteSerializable {
+        byte[] BuildData();
+    }
+
+    public class CONSTANT_Class_info : ByteSerializable {
         public ushort NameIndex;
 
         private CONSTANT_Class_info() { }
+
+        public CONSTANT_Class_info(ushort nameIndex) {
+            NameIndex = nameIndex;
+        }
 
         public static CONSTANT_Class_info ParseData(byte[] data, ref int pos) {
             CONSTANT_Class_info res = new CONSTANT_Class_info();
             res.NameIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(NameIndex);
+        }
     }
 
-    public class CONSTANT_GeneralRef_info {
+    public class CONSTANT_GeneralRef_info : ByteSerializable {
         public ushort ClassIndex;
         public ushort NameAndTypeIndex;
 
         private CONSTANT_GeneralRef_info() { }
+
+        public CONSTANT_GeneralRef_info(ushort classIndex, ushort nameAndTypeIndex) {
+            ClassIndex = classIndex;
+            NameAndTypeIndex = nameAndTypeIndex;
+        }
 
         public static CONSTANT_GeneralRef_info ParseData(byte[] data, ref int pos) {
             CONSTANT_GeneralRef_info res = new CONSTANT_GeneralRef_info();
@@ -91,9 +107,13 @@ namespace JVM.ClassDescription {
             res.NameAndTypeIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(ClassIndex).Concat(Utils.WriteUShort(NameAndTypeIndex)).ToArray();
+        }
     }
 
-    public class CONSTANT_String_info {
+    public class CONSTANT_String_info : ByteSerializable {
         public ushort StringIndex;
 
         private CONSTANT_String_info() { }
@@ -103,9 +123,13 @@ namespace JVM.ClassDescription {
             res.StringIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(StringIndex);
+        }
     }
 
-    public class CONSTANT_B4_info {
+    public class CONSTANT_B4_info : ByteSerializable {
         public byte[] Bytes = new byte[4];
 
         public CONSTANT_B4_info(byte[] bytes) {
@@ -130,9 +154,15 @@ namespace JVM.ClassDescription {
         public float ToFloat() {
             return BitConverter.ToSingle(Bytes, 0);
         }
+
+        public byte[] BuildData() {
+            var res = (byte[])Bytes.Clone();
+            Utils.ReverseIfEndian(res);
+            return res;
+        }
     }
 
-    public class CONSTANT_B8_info {
+    public class CONSTANT_B8_info : ByteSerializable {
         public byte[] HighBytes = new byte[4];
         public byte[] LowBytes = new byte[4];
 
@@ -163,13 +193,26 @@ namespace JVM.ClassDescription {
         public double ToDouble() {
             return BitConverter.Int64BitsToDouble(ToLong());
         }
+
+        public byte[] BuildData() {
+            var high = (byte[])HighBytes.Clone();
+            var low = (byte[])LowBytes.Clone();
+            Utils.ReverseIfEndian(high);
+            Utils.ReverseIfEndian(low);
+            return high.Concat(low).ToArray();
+        }
     }
 
-    public class CONSTANT_NameAndType_info {
+    public class CONSTANT_NameAndType_info : ByteSerializable {
         public ushort NameIndex;
         public ushort DescriptorIndex;
 
         private CONSTANT_NameAndType_info() { }
+
+        public CONSTANT_NameAndType_info(ushort nameIndex, ushort descriptorIndex) {
+            NameIndex = nameIndex;
+            DescriptorIndex = descriptorIndex;
+        }
 
         public static CONSTANT_NameAndType_info ParseData(byte[] data, ref int pos) {
             CONSTANT_NameAndType_info res = new CONSTANT_NameAndType_info();
@@ -177,14 +220,26 @@ namespace JVM.ClassDescription {
             res.DescriptorIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(NameIndex).Concat(Utils.WriteUShort(DescriptorIndex)).ToArray();
+        }
     }
 
-    public class CONSTANT_Utf8_info {
+    public class CONSTANT_Utf8_info : ByteSerializable {
         public ushort Length;
         public byte[] Bytes;
-        public string String;
+        public string String => _string;
+
+        private string _string;
 
         private CONSTANT_Utf8_info() { }
+
+        public CONSTANT_Utf8_info(string s) {
+            _string = s;
+            Bytes = ConvertToModifiedUTF8(s);
+            Length = (ushort)Bytes.Length;
+        }
 
         public static string ConvertFromModifiedUTF8(byte[] data) {
             StringBuilder sb = new StringBuilder();
@@ -207,6 +262,25 @@ namespace JVM.ClassDescription {
             return sb.ToString();
         }
 
+        public static byte[] ConvertToModifiedUTF8(string s) {
+            var res = new List<byte>();
+            foreach(var c in s) {
+                if (c >= '\u0001' && c <= '\u007F') {
+                    res.Add((byte)c);
+                } else if (c == '\u0000' || c <= '\u07FF') {
+                    res.Add((byte)(((c & 0x7C0) >> 6) | 0xC0));
+                    res.Add((byte)((c & 0x3F) | 0x80));
+                } else if (c <= '\uFFFF') {
+                    res.Add((byte)(((c & 0xF000) >> 12) | 0xE0));
+                    res.Add((byte)(((c & 0xFC0) >> 6) | 0x80));
+                    res.Add((byte)((c & 0x3F) | 0x80));
+                } else {
+                    throw new Exception("Cannot convert UTF-8 string to bytes!");
+                }
+            }
+            return res.ToArray();
+        }
+
         public static CONSTANT_Utf8_info ParseData(byte[] data, ref int pos) {
             CONSTANT_Utf8_info res = new CONSTANT_Utf8_info();
             res.Length = Utils.ReadUShort(data, ref pos);
@@ -214,16 +288,20 @@ namespace JVM.ClassDescription {
             for (int i = 0; i < res.Length; ++i) {
                 res.Bytes[i] = data[pos++];
             }
-            res.String = ConvertFromModifiedUTF8(res.Bytes);
+            res._string = ConvertFromModifiedUTF8(res.Bytes);
             return res;
         }
 
         public override string ToString() {
             return String;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(Length).Concat(Bytes).ToArray();
+        }
     }
 
-    public class CONSTANT_MethodHandle_info {
+    public class CONSTANT_MethodHandle_info : ByteSerializable {
         public byte ReferenceKind;
         public ushort ReferenceIndex;
 
@@ -235,9 +313,13 @@ namespace JVM.ClassDescription {
             res.ReferenceIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return new byte[1] { ReferenceKind }.Concat(Utils.WriteUShort(ReferenceIndex)).ToArray();
+        }
     }
 
-    public class CONSTANT_MethodType_info {
+    public class CONSTANT_MethodType_info : ByteSerializable {
         public ushort DescriptorIndex;
 
         private CONSTANT_MethodType_info() { }
@@ -247,9 +329,13 @@ namespace JVM.ClassDescription {
             res.DescriptorIndex = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(DescriptorIndex);
+        }
     }
 
-    public class CONSTANT_InvokeDynamic_info {
+    public class CONSTANT_InvokeDynamic_info : ByteSerializable {
         public ushort BootstrapMethodAttrIndex;
         public ushort NameAndTypeIndex;
 
@@ -260,6 +346,10 @@ namespace JVM.ClassDescription {
             res.BootstrapMethodAttrIndex = Utils.ReadUShort(data, ref pos);
             res.NameAndTypeIndex = Utils.ReadUShort(data, ref pos);
             return res;
+        }
+
+        public byte[] BuildData() {
+            return Utils.WriteUShort(BootstrapMethodAttrIndex).Concat(Utils.WriteUShort(NameAndTypeIndex)).ToArray();
         }
     }
 }

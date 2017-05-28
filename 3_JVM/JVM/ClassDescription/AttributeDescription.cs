@@ -10,6 +10,12 @@ namespace JVM.ClassDescription {
         public uint AttributeLength;
         public byte[] Info;
 
+        public AttributeDescription(ushort attributeNameIndex, uint attributeLenght, byte[] info) {
+            AttributeNameIndex = attributeNameIndex;
+            AttributeLength = attributeLenght;
+            Info = info;
+        }
+
         private AttributeDescription() { }
 
         public static AttributeDescription ParseData(byte[] data, ref int pos) {
@@ -21,6 +27,14 @@ namespace JVM.ClassDescription {
                 res.Info[i] = data[pos++];
             }
             return res;
+        }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.AddRange(Utils.WriteUShort(AttributeNameIndex));
+            res.AddRange(Utils.WriteUInt(AttributeLength));
+            res.AddRange(Info);
+            return res.ToArray();
         }
     }
 }

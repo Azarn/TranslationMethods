@@ -7,22 +7,22 @@ using System.Threading.Tasks;
 
 namespace JVM.ClassDescription {
     public class ClassFile {
-        public byte[] Magic = new byte[4];
+        public byte[] Magic = new byte[4] { 0xCA, 0xFE, 0xBA, 0xBE };
         public ushort MinorVersion;
         public ushort MajorVersion;
-        public ushort ConstantPoolCount;
-        public ConstantPoolDescription[] ConstantPool;
+        public ushort ConstantPoolCount = 0;
+        public ConstantPoolDescription[] ConstantPool = new ConstantPoolDescription[0];
         public ushort AccessFlags;
         public ushort ThisClass;
-        public ushort SuperClass;
-        public ushort InterfacesCount;
-        public ushort[] Interfaces;
-        public ushort FieldsCount;
-        public FieldInfo[] Fields;
-        public ushort MethodsCount;
-        public MethodInfo[] Methods;
-        public ushort AttributesCount;
-        public AttributeDescription[] Attributes;
+        public ushort SuperClass = 0;
+        public ushort InterfacesCount = 0;
+        public ushort[] Interfaces = new ushort[0];
+        public ushort FieldsCount = 0;
+        public FieldInfo[] Fields = new FieldInfo[0];
+        public ushort MethodsCount = 0;
+        public MethodInfo[] Methods = new MethodInfo[0];
+        public ushort AttributesCount = 0;
+        public AttributeDescription[] Attributes = new AttributeDescription[0];
 
         public IDictionary<string, object> AttributeParsers;
 
@@ -32,6 +32,38 @@ namespace JVM.ClassDescription {
 
         public ConstantPoolDescription GetConstant(ushort index) {
             return INDEX_TO_CONST_MAP[index - 1];
+        }
+
+        private static ConstantPoolDescription[] CalcConstantPool(List<ConstantPoolDescription> constantPool) {
+            int size = constantPool.Count;
+            foreach(var constant in constantPool) {
+                if(constant.Tag == ConstantPoolTag.CONSTANT_Long || constant.Tag == ConstantPoolTag.CONSTANT_Double) {
+                    ++size;
+                }
+            }
+            var res = new ConstantPoolDescription[size];
+            int i = 0;
+            foreach (var constant in constantPool) {
+                res[i++] = constant;
+                if (constant.Tag == ConstantPoolTag.CONSTANT_Long || constant.Tag == ConstantPoolTag.CONSTANT_Double) {
+                    ++i;
+                }
+            }
+            return res;
+        }
+
+        public static ClassFile CreateClassFile(ushort minorVersion, ushort majorVersion, ClassAccessFlags accessFlags,
+            ushort thisClass, List<ConstantPoolDescription> constantPool, List<MethodInfo> methods) {
+            var res = new ClassFile();
+            res.MinorVersion = minorVersion;
+            res.MajorVersion = majorVersion;
+            res.ConstantPool = CalcConstantPool(constantPool);
+            res.ConstantPoolCount = (ushort)(res.ConstantPool.Length + 1);
+            res.AccessFlags = (ushort)accessFlags;
+            res.ThisClass = thisClass;
+            res.MethodsCount = (ushort)methods.Count;
+            res.Methods = methods.ToArray();
+            return res;
         }
 
         public static ClassFile ParseClassFile(byte[] data) {
@@ -85,6 +117,47 @@ namespace JVM.ClassDescription {
 
             res.AttributeParsers = AttributeParser.GenerateAttributeMap(res, res.Attributes);
             return res;
+        }
+
+        public byte[] BuildClassFile() {
+            var res = new List<byte>();
+            res.AddRange(Magic);
+            res.AddRange(Utils.WriteUShort(MinorVersion));
+            res.AddRange(Utils.WriteUShort(MajorVersion));
+
+            res.AddRange(Utils.WriteUShort(ConstantPoolCount));
+            for(int i = 0; i < ConstantPoolCount - 1; ++i) {
+                var cpd = ConstantPool[i];
+                res.AddRange(cpd.BuildData());
+                if (cpd.Tag == ConstantPoolTag.CONSTANT_Double || cpd.Tag == ConstantPoolTag.CONSTANT_Long) {
+                    ++i;                    // fucking java
+                }
+            }
+
+            res.AddRange(Utils.WriteUShort(AccessFlags));
+            res.AddRange(Utils.WriteUShort(ThisClass));
+            res.AddRange(Utils.WriteUShort(SuperClass));
+
+            res.AddRange(Utils.WriteUShort(InterfacesCount));
+            foreach(var @interface in Interfaces) {
+                res.AddRange(Utils.WriteUShort(@interface));
+            }
+
+            res.AddRange(Utils.WriteUShort(FieldsCount));
+            foreach(var field in Fields) {
+                res.AddRange(field.BuildData());
+            }
+
+            res.AddRange(Utils.WriteUShort(MethodsCount));
+            foreach(var method in Methods) {
+                res.AddRange(method.BuildData());
+            }
+
+            res.AddRange(Utils.WriteUShort(AttributesCount));
+            foreach(var attribute in Attributes) {
+                res.AddRange(attribute.BuildData());
+            }
+            return res.ToArray();
         }
     }
 }

@@ -30,5 +30,17 @@ namespace JVM.ClassDescription {
             res.AttributeParsers = AttributeParser.GenerateAttributeMap(cFile, res.Attributes);
             return res;
         }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.AddRange(Utils.WriteUShort(AccessFlags));
+            res.AddRange(Utils.WriteUShort(NameIndex));
+            res.AddRange(Utils.WriteUShort(DescriptorIndex));
+            res.AddRange(Utils.WriteUShort(AttributesCount));
+            foreach (var attribute in Attributes) {
+                res.AddRange(attribute.BuildData());
+            }
+            return res.ToArray();
+        }
     }
 }

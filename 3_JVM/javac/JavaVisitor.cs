@@ -31,10 +31,11 @@ namespace javac {
     }
 
     class StackFrame {
-        private int _currentStackSize;
-        public int maxStackSize;
-        public int maxLocalsSize;
-        public int CurrentStackSize {
+        private ushort _currentStackSize;
+        public ushort maxStackSize;
+        public ushort maxLocalsSize;
+        public ushort thisClass;
+        public ushort CurrentStackSize {
             get {
                 return _currentStackSize;
             }
@@ -43,11 +44,19 @@ namespace javac {
                 maxStackSize = Math.Max(maxStackSize, value);
             }
         }
+        public uint TotalInstructionsSize => (uint)instructions.Select(i => (int)i.ByteSize).Sum();
         public Dictionary<string, Variable> localsMap = new Dictionary<string, Variable>();
         public List<Instruction> instructions = new List<Instruction>();
-        public short constantPoolMaxIndex;
-        public Dictionary<short, short> constantPoolIndexFix = new Dictionary<short, short>();
+        public ushort constantPoolMaxIndex;
+        public Dictionary<ushort, ushort> constantPoolIndexFix = new Dictionary<ushort, ushort>();
         public List<ConstantPoolDescription> constantPool = new List<ConstantPoolDescription>();
+
+        public List<byte> BuildInstructions() {
+            return instructions.Select(i => i.BuildData()).Aggregate(new List<byte>(), (p, n) => {
+                p.AddRange(n);
+                return p;
+            });
+        }
 
         public Variable AddVariable(string name, TYPE type) {
             if (localsMap.ContainsKey(name)) {
@@ -63,7 +72,7 @@ namespace javac {
                 index = (byte)localsMap.Count
             };
             localsMap.Add(name, variable);
-            maxLocalsSize = Math.Max(maxLocalsSize, localsMap.Count);
+            maxLocalsSize = Math.Max(maxLocalsSize, (ushort)localsMap.Count);
             return variable;
         }
 
@@ -81,7 +90,8 @@ namespace javac {
                 maxLocalsSize = maxLocalsSize,
                 _currentStackSize = _currentStackSize,
                 localsMap = new Dictionary<string, Variable>(localsMap),
-                constantPool = constantPool
+                constantPool = constantPool,
+                thisClass = thisClass
             };
         }
 
@@ -91,36 +101,120 @@ namespace javac {
             instructions.AddRange(other.instructions);
         }
 
-        public short GetOrAddConstant4(byte[] value, ConstantPoolTag tag) {
-            for(short i = 0; i < constantPool.Count; ++i) {
+        public ushort GetOrAddConstant4(byte[] value, ConstantPoolTag tag) {
+            for(ushort i = 0; i < constantPool.Count; ++i) {
                 if (constantPool[i].Tag == tag && ((CONSTANT_B4_info)constantPool[i].Info).Bytes == value) {
                     return constantPoolIndexFix[i];
                 }
             }
-            short res = (short)constantPool.Count;
+            var res = (ushort)constantPool.Count;
             constantPool.Add(new ConstantPoolDescription(tag, new CONSTANT_B4_info(value)));
-            constantPoolMaxIndex += 1;
+            ++constantPoolMaxIndex;
             constantPoolIndexFix.Add(res, constantPoolMaxIndex);
-            return res;
+            return constantPoolMaxIndex;
         }
 
-        public short GetOrAddConstant8(byte[] highvalue, byte[] lowvalue, ConstantPoolTag tag) {
-            for (short i = 0; i < constantPool.Count; ++i) {
+        public ushort GetOrAddConstant8(byte[] highvalue, byte[] lowvalue, ConstantPoolTag tag) {
+            for (ushort i = 0; i < constantPool.Count; ++i) {
+                if (constantPool[i]. Tag != tag) {
+                    continue;
+                }
                 var cnst = (CONSTANT_B8_info)constantPool[i].Info;
-                if (constantPool[i].Tag == tag && cnst.HighBytes == highvalue && cnst.LowBytes == lowvalue) {
+                if (cnst.HighBytes == highvalue && cnst.LowBytes == lowvalue) {
                     return constantPoolIndexFix[i];
                 }
             }
-            short res = (short)constantPool.Count;
+            var res = (ushort)constantPool.Count;
             constantPool.Add(new ConstantPoolDescription(tag, new CONSTANT_B8_info(highvalue, lowvalue)));
             constantPoolMaxIndex += 2;
             constantPoolIndexFix.Add(res, constantPoolMaxIndex);
-            return res;
+            return constantPoolMaxIndex;
+        }
+
+        public ushort GetOrAddString(string s) {
+            for (ushort i = 0; i < constantPool.Count; ++i) {
+                if (constantPool[i].Tag != ConstantPoolTag.CONSTANT_Utf8) {
+                    continue;
+                }
+                var cnst = (CONSTANT_Utf8_info)constantPool[i].Info;
+                if (s == cnst.String) {
+                    return constantPoolIndexFix[i];
+                }
+            }
+
+            var res = (ushort)constantPool.Count;
+            constantPool.Add(new ConstantPoolDescription(ConstantPoolTag.CONSTANT_Utf8,
+                new CONSTANT_Utf8_info(s)));
+            ++constantPoolMaxIndex;
+            constantPoolIndexFix.Add(res, constantPoolMaxIndex);
+            return constantPoolMaxIndex;
+        }
+
+        public ushort GetOrAddNameAndType(string name, string descriptor) {
+            var nameInd = GetOrAddString(name);
+            var descriptorInd = GetOrAddString(descriptor);
+            for (ushort i = 0; i < constantPool.Count; ++i) {
+                if (constantPool[i].Tag != ConstantPoolTag.CONSTANT_NameAndType) {
+                    continue;
+                }
+                var cnst = (CONSTANT_NameAndType_info)constantPool[i].Info;
+                if (cnst.NameIndex == nameInd && cnst.DescriptorIndex == descriptorInd) {
+                    return constantPoolIndexFix[i];
+                }
+            }
+
+            var res = (ushort)constantPool.Count;
+            constantPool.Add(new ConstantPoolDescription(ConstantPoolTag.CONSTANT_NameAndType, 
+                new CONSTANT_NameAndType_info(nameInd, descriptorInd)));
+            ++constantPoolMaxIndex;
+            constantPoolIndexFix.Add(res, constantPoolMaxIndex);
+            return constantPoolMaxIndex;
+        }
+
+        public ushort GetOrAddClass(string name) {
+            var nameInd = GetOrAddString(name);
+            for (ushort i = 0; i < constantPool.Count; ++i) {
+                if (constantPool[i].Tag != ConstantPoolTag.CONSTANT_Class) {
+                    continue;
+                }
+                var cnst = (CONSTANT_Class_info)constantPool[i].Info;
+                if (cnst.NameIndex == nameInd) {
+                    return constantPoolIndexFix[i];
+                }
+            }
+
+            var res = (ushort)constantPool.Count;
+            constantPool.Add(new ConstantPoolDescription(ConstantPoolTag.CONSTANT_Class,
+                new CONSTANT_Class_info(nameInd)));
+            ++constantPoolMaxIndex;
+            constantPoolIndexFix.Add(res, constantPoolMaxIndex);
+            return constantPoolMaxIndex;
+        }
+
+        public ushort GetOrAddMethodref(string name, string descriptor, string className) {
+            var nameAndTypeInd = GetOrAddNameAndType(name, descriptor);
+            var classInd = GetOrAddClass(className);
+            for (ushort i = 0; i < constantPool.Count; ++i) {
+                if (constantPool[i].Tag != ConstantPoolTag.CONSTANT_Methodref) {
+                    continue;
+                }
+                var cnst = (CONSTANT_GeneralRef_info)constantPool[i].Info;
+                if (cnst.ClassIndex == classInd && cnst.NameAndTypeIndex == nameAndTypeInd) {
+                    return constantPoolIndexFix[i];
+                }
+            }
+
+            var res = (ushort)constantPool.Count;
+            constantPool.Add(new ConstantPoolDescription(ConstantPoolTag.CONSTANT_Methodref,
+                new CONSTANT_GeneralRef_info(classInd, nameAndTypeInd)));
+            ++constantPoolMaxIndex;
+            constantPoolIndexFix.Add(res, constantPoolMaxIndex);
+            return constantPoolMaxIndex;
         }
 
         public void AddInstructionAndRecalcSize(Instruction instruction) {
             instructions.Add(instruction);
-            CurrentStackSize += instruction.OpCode.StackChange;
+            CurrentStackSize += (ushort)instruction.OpCode.StackChange;
         }
     }
 
@@ -626,7 +720,7 @@ namespace javac {
 
         private void AddInstruction(Instruction instruction, ref ExpressionValue expr) {
             expr.instructions.Add(instruction);
-            _stackFrame.CurrentStackSize += instruction.OpCode.StackChange;
+            _stackFrame.CurrentStackSize += (ushort)instruction.OpCode.StackChange;
         }
         
         /*private void AddRangeInstructions(IEnumerable<Instruction> instructions, ref ExpressionValue expr) {
@@ -896,6 +990,70 @@ namespace javac {
             return expr;
         }
 
+        public override ExpressionValue VisitLogicalAnd([NotNull] JavaParser.LogicalAndContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+
+            if (expr.type != TYPE.BOOLEAN) {
+                throw new Exception("Cannot cast expression to boolean!");
+            }
+
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dup]
+            }, ref expr);
+
+            short nextExprSize;
+            checked {
+                nextExprSize = (short)second_expr.instructions.Select(v => (int)v.ByteSize).Sum();
+                nextExprSize += (short)OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifeq].OpCodeSize;
+                nextExprSize += (short)OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.pop].OpCodeSize;
+            }
+            AddInstruction(InstructionGenerator.GenerateIntEqual(nextExprSize), ref expr);
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.pop]
+            }, ref expr);
+            expr.instructions.AddRange(second_expr.instructions);
+
+            expr.type = TYPE.BOOLEAN;
+            return expr;
+        }
+
+        public override ExpressionValue VisitLogicalOr([NotNull] JavaParser.LogicalOrContext context) {
+            // TODO: Check casts
+            var expr = context.first.Accept(this);
+            var second_expr = context.second.Accept(this);
+            if (expr.type != second_expr.type) {
+                throw new Exception("Incorrect types!");
+            }
+
+            if (expr.type != TYPE.BOOLEAN) {
+                throw new Exception("Cannot cast expression to boolean!");
+            }
+
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.dup]
+            }, ref expr);
+
+            short nextExprSize;
+            checked {
+                nextExprSize = (short)second_expr.instructions.Select(v => (int)v.ByteSize).Sum();
+                nextExprSize += (short)OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifeq].OpCodeSize;
+                nextExprSize += (short)OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.pop].OpCodeSize;
+            }
+            AddInstruction(InstructionGenerator.GenerateIntNotEqual(nextExprSize), ref expr);
+            AddInstruction(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.pop]
+            }, ref expr);
+            expr.instructions.AddRange(second_expr.instructions);
+
+            expr.type = TYPE.BOOLEAN;
+            return expr;
+        }
+
         public override ExpressionValue VisitParenExpr([NotNull] JavaParser.ParenExprContext context) {
             return context.expression_value().Accept(this);
         }
@@ -914,9 +1072,26 @@ namespace javac {
             _stackFrame = stackFrame;
         }
 
+        public override StackFrame VisitCompileUnit([NotNull] JavaParser.CompileUnitContext context) {
+            _stackFrame.thisClass = _stackFrame.GetOrAddClass(context.VARNAME().GetText());
+            context.main_method().Accept(this);
+            return _stackFrame;
+        }
+
         public override StackFrame VisitMain_args([NotNull] JavaParser.Main_argsContext context) {
             _stackFrame.AddVariable(context.argName.Text, TYPE.INT);        // actually it is a string
             return base.VisitMain_args(context);
+        }
+
+        public override StackFrame VisitMain_method([NotNull] JavaParser.Main_methodContext context) {
+            context.main_args().Accept(this);
+            foreach(var statement in context.statement()) {
+                statement.Accept(this);
+            }
+            _stackFrame.AddInstructionAndRecalcSize(new Instruction {
+                OpCode = OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.@return]
+            });
+            return _stackFrame;
         }
 
         public override StackFrame VisitNewBlock([NotNull] JavaParser.NewBlockContext context) {
@@ -955,6 +1130,69 @@ namespace javac {
             } else {
 
             }
+            return _stackFrame;
+        }
+
+        public override StackFrame VisitWhile([NotNull] JavaParser.WhileContext context) {
+            var expr = context.expression_value().Accept(new ExpressionValueVisitor(_stackFrame));
+            if (expr.type != TYPE.BOOLEAN) {
+                throw new Exception("Expression does not evaluate to boolean!");
+            }
+
+            var currentInstructionsSize = _stackFrame.TotalInstructionsSize;
+            _stackFrame.instructions.AddRange(expr.instructions);
+
+            var visitor = new JavaVisitor(_stackFrame.CreateCopy());
+            context.statement().Accept(visitor);
+            checked {
+                _stackFrame.AddInstructionAndRecalcSize(InstructionGenerator.GenerateIntEqual(
+                    (short)(visitor.StackFrame.TotalInstructionsSize
+                    + OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifeq].OpCodeSize
+                    + OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.@goto].OpCodeSize)
+                    ));
+            }
+
+            _stackFrame.JoinStacksWithoutLocals(visitor.StackFrame);
+            _stackFrame.AddInstructionAndRecalcSize(InstructionGenerator.GenerateGoto(
+                (short)((int)currentInstructionsSize - (int)_stackFrame.TotalInstructionsSize)));
+
+            return _stackFrame;
+        }
+
+        public override StackFrame VisitIf([NotNull] JavaParser.IfContext context) {
+            var expr = context.expression_value().Accept(new ExpressionValueVisitor(_stackFrame));
+            if (expr.type != TYPE.BOOLEAN) {
+                throw new Exception("Expression does not evaluate to boolean!");
+            }
+
+            //var currentInstructionsSize = _stackFrame.TotalInstructionsSize;
+            _stackFrame.instructions.AddRange(expr.instructions);
+
+            var true_visitor = new JavaVisitor(_stackFrame.CreateCopy());
+            var false_visitor = new JavaVisitor(_stackFrame.CreateCopy());
+            context.true_branch.Accept(true_visitor);
+
+            if (context.ELSE() != null) {
+                context.false_branch.Accept(false_visitor);
+                true_visitor.StackFrame.AddInstructionAndRecalcSize(
+                    InstructionGenerator.GenerateGoto(
+                        (short)(false_visitor.StackFrame.TotalInstructionsSize
+                        + OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.@goto].OpCodeSize)
+                    ));
+            }
+            
+            checked {
+                _stackFrame.AddInstructionAndRecalcSize(InstructionGenerator.GenerateIntEqual(
+                    (short)(true_visitor.StackFrame.TotalInstructionsSize
+                    + OpCodes.NAME_TO_OPCODE_MAP[OpCodeName.ifeq].OpCodeSize)
+                    ));
+            }
+
+            _stackFrame.JoinStacksWithoutLocals(true_visitor.StackFrame);
+            if (context.ELSE() != null) {
+                _stackFrame.JoinStacksWithoutLocals(false_visitor.StackFrame);
+            }
+
             return _stackFrame;
         }
     }

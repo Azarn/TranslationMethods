@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace JVM.ClassDescription {
+    [Flags]
     public enum MethodAccessFlags {
         ACC_PUBLIC = 0x0001,
         ACC_PRIVATE = 0x0002,

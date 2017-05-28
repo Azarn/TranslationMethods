@@ -5,7 +5,7 @@ grammar Java;
  */
 
 compileUnit
-    : public_maybe_static CLASS VARNAME LBRACE main_method RBRACE
+    : PUBLIC CLASS VARNAME LBRACE main_method RBRACE
     ;
 
 main_method
@@ -47,8 +47,8 @@ expression_value
     | first=expression_value op=(ADD | SUB) second=expression_value         # AddSub
     | first=expression_value op=(LT | LE | GT | GE) second=expression_value # LtLeGtGe
     | first=expression_value op=(EQUAL | NOTEQUAL) second=expression_value  # EqualNotEqual
-    | first=expression_value AND second=expression_value                    # And
-    | first=expression_value OR second=expression_value                     # Or
+    | first=expression_value LOGICAL_AND second=expression_value            # LogicalAnd
+    | first=expression_value LOGICAL_OR second=expression_value             # LogicalOr
     | expression                                                            # PureExpr
     ;
 
@@ -69,7 +69,7 @@ do_while
     ;
 
 if
-    : IF LPAREN expression_value RPAREN statement (ELSE statement)?
+    : IF LPAREN expression_value RPAREN true_branch=statement (ELSE false_branch=statement)?
     ;
 
 print_call
@@ -186,15 +186,6 @@ RBRACE
 SEMI
     : ';'
     ;
-ASSIGN
-    : '='
-    ;
-GT
-    : '>'
-    ;
-LT
-    : '<'
-    ;
 EQUAL
     : '=='
     ;
@@ -222,17 +213,26 @@ LMOD
 NOTEQUAL
     : '!='
     ;
-ADD
-    : '+'
+ASSIGN
+    : '='
+    ;
+GT
+    : '>'
+    ;
+LT
+    : '<'
     ;
 AA
     : '++'
     ;
-SUB
-    : '-'
+ADD
+    : '+'
     ;
 SS
     : '--'
+    ;
+SUB
+    : '-'
     ;
 MUL
     : '*'
@@ -245,6 +245,12 @@ MOD
     ;
 LOGICAL_NOT
     : '!'
+    ;
+LOGICAL_AND
+    : '&&'
+    ;
+LOGICAL_OR
+    : '||'
     ;
 AND
     : '&&'

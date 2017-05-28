@@ -65,7 +65,8 @@ namespace JVM {
 
         public static void Main(string[] args) {
             //byte[] data = File.ReadAllBytes(@"..\..\NOD.class");
-            byte[] data = File.ReadAllBytes(@"..\..\SQRT.class");
+            //byte[] data = File.ReadAllBytes(@"..\..\SQRT.class");
+            byte[] data = File.ReadAllBytes(@"..\..\..\javac\NOD.class");
             ClassFile cFile = ClassFile.ParseClassFile(data);
 
             // TODO: check cFile.AccessFlags
@@ -93,6 +94,7 @@ namespace JVM {
                 throw new Exception("Main method is not found!");
             }
             RunMethod(cFile, methodMain, new int[0]);
+            Console.ReadLine();
         }
     }
 }

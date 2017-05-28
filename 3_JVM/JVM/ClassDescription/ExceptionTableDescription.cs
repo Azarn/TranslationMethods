@@ -21,5 +21,14 @@ namespace JVM.ClassDescription {
             res.CatchType = Utils.ReadUShort(data, ref pos);
             return res;
         }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.AddRange(Utils.WriteUShort(StartPC));
+            res.AddRange(Utils.WriteUShort(StartPC));
+            res.AddRange(Utils.WriteUShort(HandlerPC));
+            res.AddRange(Utils.WriteUShort(CatchType));
+            return res.ToArray();
+        }
     }
 }

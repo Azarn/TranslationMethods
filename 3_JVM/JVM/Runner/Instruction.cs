@@ -11,6 +11,10 @@ namespace JVM.Runner {
 
         public uint ByteSize => OpCode.OpCodeSize;
 
+        public byte[] BuildData() {
+            return new byte[1] { OpCode.Value }.Concat(Utils.ReverseIfEndian(Operand)).ToArray();
+        }
+
         public override string ToString() {
             if (Operand.Length == 0) {
                 return OpCode.Name.ToString();

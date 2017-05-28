@@ -20,6 +20,11 @@ namespace JVM.ClassDescription {
             }
             return res;
         }
+        
+        public static AttributeDescription GenerateCodeAttribute(CodeAttributeParser codeAttribute, ushort attributeNameIndex) {
+            var data = codeAttribute.BuildData();
+            return new AttributeDescription(attributeNameIndex, (uint)data.Length, data);
+        }
     }
 
     public class CodeAttributeParser {
@@ -27,12 +32,19 @@ namespace JVM.ClassDescription {
         public ushort MaxLocals;
         public uint CodeLength;
         public byte[] Code;
-        public ushort ExceptionTableLength;
-        public ExceptionTableDescription[] ExceptionTable;
-        public ushort AttributesCount;
-        public AttributeDescription[] Attributes;
+        public ushort ExceptionTableLength = 0;
+        public ExceptionTableDescription[] ExceptionTable = new ExceptionTableDescription[0];
+        public ushort AttributesCount = 0;
+        public AttributeDescription[] Attributes = new AttributeDescription[0];
 
         public IDictionary<string, object> AttributeParsers;
+
+        public CodeAttributeParser(ushort maxStack, ushort maxLocals, List<byte> code) {
+            MaxStack = maxStack;
+            MaxLocals = maxLocals;
+            CodeLength = (uint)code.Count;
+            Code = code.ToArray();
+        }
 
         private CodeAttributeParser() { }
 
@@ -62,6 +74,24 @@ namespace JVM.ClassDescription {
 
             res.AttributeParsers = AttributeParser.GenerateAttributeMap(cFile, res.Attributes);
             return res;
+        }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.AddRange(Utils.WriteUShort(MaxStack));
+            res.AddRange(Utils.WriteUShort(MaxLocals));
+            res.AddRange(Utils.WriteUInt(CodeLength));
+            res.AddRange(Code);
+            res.AddRange(Utils.WriteUShort(ExceptionTableLength));
+            foreach(var exceptionTable in ExceptionTable) {
+                res.AddRange(exceptionTable.BuildData());
+            }
+
+            res.AddRange(Utils.WriteUShort(AttributesCount));
+            foreach (var attribute in Attributes) {
+                res.AddRange(attribute.BuildData());
+            }
+            return res.ToArray();
         }
     }
 }

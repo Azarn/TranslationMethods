@@ -30,9 +30,11 @@ namespace JVM.Runner {
             { OpCodeName.dstore_2, dstore_2 },
             { OpCodeName.dstore_3, dstore_3 },
             { OpCodeName.dsub, dsub },
+            { OpCodeName.dup, dup },
             { OpCodeName.@goto, @goto },
             { OpCodeName.i2d, i2d },
             { OpCodeName.iadd, iadd },
+            { OpCodeName.iand, iand },
             { OpCodeName.iconst_m1, iconst_m1 },
             { OpCodeName.iconst_0, iconst_0 },
             { OpCodeName.iconst_1, iconst_1 },
@@ -62,6 +64,7 @@ namespace JVM.Runner {
             { OpCodeName.iload_1, iload_1 },
             { OpCodeName.iload_2, iload_2 },
             { OpCodeName.iload_3, iload_3 },
+            { OpCodeName.ior, ior },
             { OpCodeName.irem, irem },
             { OpCodeName.istore, istore },
             { OpCodeName.istore_0, istore_0 },
@@ -72,6 +75,7 @@ namespace JVM.Runner {
             { OpCodeName.ldc_w, ldc_w },
             { OpCodeName.ldc2_w, ldc2_w },
             { OpCodeName.nop, nop },
+            { OpCodeName.pop, pop },
             { OpCodeName.@return, @return },
             { OpCodeName.sipush, sipush },
 
@@ -232,6 +236,11 @@ namespace JVM.Runner {
             nop(instruction, frame, cFile);
         }
 
+        private static void dup(Instruction instruction, Frame frame, ClassFile cFile) {
+            frame.Stack.Push(frame.Stack.Peek());
+            nop(instruction, frame, cFile);
+        }
+
         private static void @goto(Instruction instruction, Frame frame, ClassFile cFile) {
             frame.IP += BitConverter.ToInt16(instruction.Operand, 0);
         }
@@ -243,6 +252,11 @@ namespace JVM.Runner {
 
         private static void iadd(Instruction instruction, Frame frame, ClassFile cFile) {
             frame.Stack.Push(frame.Stack.Pop() + frame.Stack.Pop());
+            nop(instruction, frame, cFile);
+        }
+
+        private static void iand(Instruction instruction, Frame frame, ClassFile cFile) {
+            frame.Stack.Push(frame.Stack.Pop() & frame.Stack.Pop());
             nop(instruction, frame, cFile);
         }
 
@@ -441,10 +455,15 @@ namespace JVM.Runner {
             nop(instruction, frame, cFile);
         }
 
+        private static void ior(Instruction instruction, Frame frame, ClassFile cFile) {
+            frame.Stack.Push(frame.Stack.Pop() | frame.Stack.Pop());
+            nop(instruction, frame, cFile);
+        }
+
         private static void isub(Instruction instruction, Frame frame, ClassFile cFile) {
             int s = frame.Stack.Pop();
             int f = frame.Stack.Pop();
-            frame.Stack.Push(f / s);
+            frame.Stack.Push(f - s);
             nop(instruction, frame, cFile);
         }
 
@@ -499,6 +518,11 @@ namespace JVM.Runner {
 
         private static void nop(Instruction instruction, Frame frame, ClassFile cFile) {
             frame.IP += (int)instruction.OpCode.OpCodeSize;
+        }
+
+        private static void pop(Instruction instruction, Frame frame, ClassFile cFile) {
+            frame.Stack.Pop();
+            nop(instruction, frame, cFile);
         }
 
         private static void sipush(Instruction instruction, Frame frame, ClassFile cFile) {

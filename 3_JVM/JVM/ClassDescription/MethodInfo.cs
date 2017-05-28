@@ -9,12 +9,18 @@ namespace JVM.ClassDescription {
         public ushort AccessFlags;
         public ushort NameIndex;
         public ushort DescriptorIndex;
-        public ushort AttributesCount;
-        public AttributeDescription[] Attributes;
+        public ushort AttributesCount = 0;
+        public AttributeDescription[] Attributes = new AttributeDescription[0];
 
         public IDictionary<string, object> AttributeParsers;
 
         private MethodInfo() { }
+
+        public MethodInfo(MethodAccessFlags accessFlags, ushort nameIndex, ushort descriptorIndex) {
+            AccessFlags = (ushort)accessFlags;
+            NameIndex = nameIndex;
+            DescriptorIndex = descriptorIndex;
+        }
 
         public static MethodInfo ParseData(ClassFile cFile, byte[] data, ref int pos) {
             MethodInfo res = new MethodInfo();
@@ -29,6 +35,18 @@ namespace JVM.ClassDescription {
 
             res.AttributeParsers = AttributeParser.GenerateAttributeMap(cFile, res.Attributes);
             return res;
+        }
+
+        public byte[] BuildData() {
+            var res = new List<byte>();
+            res.AddRange(Utils.WriteUShort(AccessFlags));
+            res.AddRange(Utils.WriteUShort(NameIndex));
+            res.AddRange(Utils.WriteUShort(DescriptorIndex));
+            res.AddRange(Utils.WriteUShort(AttributesCount));
+            foreach(var attribute in Attributes) {
+                res.AddRange(attribute.BuildData());
+            }
+            return res.ToArray();
         }
     }
 }
