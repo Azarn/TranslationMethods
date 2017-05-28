@@ -1159,6 +1159,27 @@ namespace javac {
             return _stackFrame;
         }
 
+        public override StackFrame VisitDo_while([NotNull] JavaParser.Do_whileContext context) {
+            var currentInstructionsSize = _stackFrame.TotalInstructionsSize;
+
+            var visitor = new JavaVisitor(_stackFrame.CreateCopy());
+            context.statement().Accept(visitor);
+            _stackFrame.JoinStacksWithoutLocals(visitor.StackFrame);
+
+            var expr = context.expression_value().Accept(new ExpressionValueVisitor(_stackFrame));
+            if (expr.type != TYPE.BOOLEAN) {
+                // TODO: unwind stackframe(?)
+                throw new Exception("Expression does not evaluate to boolean!");
+            }
+            _stackFrame.instructions.AddRange(expr.instructions);
+
+            checked {
+                _stackFrame.AddInstructionAndRecalcSize(InstructionGenerator.GenerateIntNotEqual(
+                    (short)(currentInstructionsSize - _stackFrame.TotalInstructionsSize)));
+            }
+            return _stackFrame;
+        }
+
         public override StackFrame VisitIf([NotNull] JavaParser.IfContext context) {
             var expr = context.expression_value().Accept(new ExpressionValueVisitor(_stackFrame));
             if (expr.type != TYPE.BOOLEAN) {
